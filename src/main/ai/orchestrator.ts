@@ -148,36 +148,54 @@ export async function runAgent(
 
   const tools = openRouterToolSpec()
 
+  const fallbackModels = [
+    opts.model,
+    'meta-llama/llama-3.3-70b-instruct:free',
+    'google/gemma-3-27b-it:free',
+    'nousresearch/hermes-3-llama-3.1-405b:free',
+    'openrouter/owl-alpha'
+  ]
+
   for (let iter = 0; iter < 8; iter++) {
-    let res: Response
-    try {
-      console.log(
-        `[ai] iter ${iter} POST OpenRouter model=${opts.model} messages=${messages.length}`
-      )
-      const payload: Record<string, unknown> = {
-        model: opts.model,
-        messages,
-        tools,
-        tool_choice: 'auto'
+    let res: Response | null = null
+    let activeModel = opts.model
+
+    // Try fallback models if rate-limited
+    for (const m of fallbackModels) {
+      activeModel = m
+      try {
+        console.log(`[ai] iter ${iter} POST OpenRouter model=${activeModel} messages=${messages.length}`)
+        const payload: Record<string, unknown> = {
+          model: activeModel,
+          messages,
+          tools,
+          tool_choice: 'auto'
+        }
+        res = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${opts.apiKey}`,
+            'HTTP-Referer': 'https://aurora-de.app',
+            'X-OpenRouter-Title': 'Aurora DE'
+          },
+          body: JSON.stringify(payload),
+          signal: opts.signal
+        })
+        
+        if (res.status === 429 || res.status === 502) {
+          console.warn(`[ai] Model ${activeModel} returned ${res.status}, trying next fallback...`)
+          continue
+        }
+        break // Stop fallback loop if request was successful or failed with other error
+      } catch (err) {
+        console.warn(`[ai] Fetch failed for ${activeModel}:`, err)
+        continue
       }
-      res = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${opts.apiKey}`,
-          'HTTP-Referer': 'https://aurora-de.app',
-          'X-OpenRouter-Title': 'Aurora DE'
-        },
-        body: JSON.stringify(payload),
-        signal: opts.signal
-      })
-    } catch (err) {
-      send({
-        type: 'error',
-        data: `Impossibile contattare OpenRouter. Verifica la connessione internet: ${
-          err instanceof Error ? err.message : String(err)
-        }`
-      })
+    }
+
+    if (!res) {
+      send({ type: 'error', data: 'Nessun modello di riserva disponibile. Verifica la connessione o riprova più tardi.' })
       return
     }
 
@@ -191,7 +209,7 @@ export async function runAgent(
       const isAuthError = res.status === 401 || res.status === 403
       const msg = isAuthError
         ? 'Chiave API OpenRouter non valida o scaduta. Controlla in Impostazioni → Assistente AI.'
-        : `OpenRouter HTTP ${res.status}${detail ? ` — ${detail.slice(0, 300)}` : ''}`
+        : `Tutti i modelli gratuiti sono momentaneamente intasati (HTTP ${res.status}). Riprova tra 1-2 minuti.`
       send({ type: 'error', data: msg })
       return
     }
