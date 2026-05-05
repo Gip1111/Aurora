@@ -122,64 +122,87 @@ export function AISidebar(): JSX.Element {
               ))
             )}
           </div>
-          <div
-            style={{
-              padding: 10,
-              borderTop: '1px solid var(--border-glass)',
-              display: 'flex',
-              gap: 6
+          <SidebarInput
+            status={status}
+            onSubmit={(text) => {
+              void send(text)
             }}
-          >
-            <input
-              placeholder="Messaggio…"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  if (!input.trim()) return
-                  void send(input)
-                  setInput('')
-                }
-              }}
-              style={{
-                flex: 1,
-                padding: '8px 12px',
-                fontSize: 13,
-                background: 'var(--bg-elev-1)',
-                border: '1px solid var(--border-glass)',
-                borderRadius: 8,
-                color: 'var(--text-primary)',
-                outline: 'none'
-              }}
-            />
-            <button
-              onClick={() => {
-                if (status === 'streaming') {
-                  abort()
-                } else if (input.trim()) {
-                  void send(input)
-                  setInput('')
-                }
-              }}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 8,
-                background:
-                  status === 'streaming' ? 'rgba(255,108,108,0.2)' : 'var(--gradient-aurora)',
-                border: 'none',
-                color: status === 'streaming' ? '#ffb3bf' : '#0b0b14',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Send size={14} />
-            </button>
-          </div>
+            onAbort={abort}
+          />
         </motion.div>
       )}
     </AnimatePresence>
   )
 }
+
+function SidebarInput({
+  status,
+  onSubmit,
+  onAbort
+}: {
+  status: string
+  onSubmit: (text: string) => void
+  onAbort: () => void
+}): JSX.Element {
+  const [local, setLocal] = useState('')
+
+  return (
+    <div
+      style={{
+        padding: 10,
+        borderTop: '1px solid var(--border-glass)',
+        display: 'flex',
+        gap: 6
+      }}
+    >
+      <input
+        placeholder="Messaggio…"
+        value={local}
+        onChange={(e) => setLocal(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            if (!local.trim()) return
+            onSubmit(local)
+            setLocal('')
+          }
+        }}
+        style={{
+          flex: 1,
+          padding: '8px 12px',
+          fontSize: 13,
+          background: 'var(--bg-elev-1)',
+          border: '1px solid var(--border-glass)',
+          borderRadius: 8,
+          color: 'var(--text-primary)',
+          outline: 'none'
+        }}
+      />
+      <button
+        onClick={() => {
+          if (status === 'streaming') {
+            onAbort()
+          } else if (local.trim()) {
+            onSubmit(local)
+            setLocal('')
+          }
+        }}
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 8,
+          background:
+            status === 'streaming' ? 'rgba(255,108,108,0.2)' : 'var(--gradient-aurora)',
+          border: 'none',
+          color: status === 'streaming' ? '#ffb3bf' : '#0b0b14',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <Send size={14} />
+      </button>
+    </div>
+  )
+}
+

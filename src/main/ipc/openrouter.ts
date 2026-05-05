@@ -20,11 +20,11 @@ export function registerOpenRouterIpc(ipcMain: IpcMain): void {
   /** Return a curated list of recommended models */
   ipcMain.handle('openrouter:models', async (): Promise<string[]> => {
     return [
+      'meta-llama/llama-3.3-70b-instruct:free',
+      'google/gemma-3-27b-it:free',
+      'nousresearch/hermes-3-llama-3.1-405b:free',
       'openrouter/owl-alpha',
-      'google/gemini-2.5-flash',
-      'google/gemini-2.0-flash-exp:free',
-      'meta-llama/llama-4-scout:free',
-      'qwen/qwen-2.5-72b-instruct:free'
+      'google/gemini-2.5-flash'
     ]
   })
 }

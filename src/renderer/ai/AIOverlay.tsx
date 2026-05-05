@@ -53,10 +53,9 @@ export function AIOverlay(): JSX.Element {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }, [messages])
 
-  const submit = (): void => {
-    if (!input.trim() || status === 'streaming') return
-    void send(input)
-    setInput('')
+  const submit = (text: string): void => {
+    if (!text.trim() || status === 'streaming') return
+    void send(text)
   }
 
   return (
@@ -249,88 +248,139 @@ export function AIOverlay(): JSX.Element {
               )}
             </div>
 
-            {/* Input */}
-            <div
-              style={{
-                padding: 12,
-                borderTop: '1px solid var(--border-glass)',
-                display: 'flex',
-                gap: 8,
-                alignItems: 'flex-end'
-              }}
-            >
-              <textarea
-                ref={inputRef}
-                rows={1}
-                placeholder="Chiedi ad Aurora…"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    submit()
-                  }
-                  if (e.key === 'Escape') setOpen(false)
-                }}
-                style={{
-                  flex: 1,
-                  resize: 'none',
-                  padding: '10px 14px',
-                  minHeight: 40,
-                  maxHeight: 160,
-                  fontSize: 14,
-                  fontFamily: 'inherit',
-                  color: 'var(--text-primary)',
-                  background: 'var(--bg-elev-1)',
-                  border: '1px solid var(--border-glass)',
-                  borderRadius: 10,
-                  outline: 'none'
-                }}
-              />
-              {status === 'streaming' ? (
-                <button
-                  onClick={abort}
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 10,
-                    background: 'rgba(255,108,108,0.18)',
-                    border: '1px solid rgba(255,108,108,0.4)',
-                    color: '#ffb3bf',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                  title="Ferma"
-                >
-                  <Square size={14} />
-                </button>
-              ) : (
-                <button
-                  onClick={submit}
-                  disabled={!input.trim()}
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 10,
-                    background: input.trim() ? 'var(--gradient-aurora)' : 'var(--bg-elev-1)',
-                    border: input.trim() ? 'none' : '1px solid var(--border-glass)',
-                    color: '#0b0b14',
-                    cursor: input.trim() ? 'pointer' : 'not-allowed',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                  title="Invia"
-                >
-                  <Send size={15} />
-                </button>
-              )}
-            </div>
+            {/* Input is isolated to prevent re-rendering the whole overlay on every keystroke */}
+            <OverlayInput
+              status={status}
+              input={input}
+              setInput={setInput}
+              inputRef={inputRef}
+              onSubmit={submit}
+              onAbort={abort}
+              onClose={() => setOpen(false)}
+            />
           </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
   )
 }
+
+function OverlayInput({
+  status,
+  input,
+  setInput,
+  inputRef,
+  onSubmit,
+  onAbort,
+  onClose
+}: {
+  status: string
+  input: string
+  setInput: (v: string) => void
+  inputRef: React.RefObject<HTMLTextAreaElement>
+  onSubmit: (text: string) => void
+  onAbort: () => void
+  onClose: () => void
+}): JSX.Element {
+  // Local state for fast typing without re-rendering the parent
+  const [local, setLocal] = useState(input)
+
+  // Sync from parent if parent overrides (like Quick Actions or Context)
+  useEffect(() => {
+    setLocal(input)
+  }, [input])
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setLocal(e.target.value)
+    // Only update parent sparingly or keep parent state mostly for init
+  }
+
+  const handleSubmit = () => {
+    if (!local.trim() || status === 'streaming') return
+    onSubmit(local)
+    setLocal('')
+    setInput('')
+  }
+
+  return (
+    <div
+      style={{
+        padding: 12,
+        borderTop: '1px solid var(--border-glass)',
+        display: 'flex',
+        gap: 8,
+        alignItems: 'flex-end'
+      }}
+    >
+      <textarea
+        ref={inputRef}
+        rows={1}
+        placeholder="Chiedi ad Aurora…"
+        value={local}
+        onChange={handleChange}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault()
+            handleSubmit()
+          }
+          if (e.key === 'Escape') onClose()
+        }}
+        style={{
+          flex: 1,
+          resize: 'none',
+          padding: '10px 14px',
+          minHeight: 40,
+          maxHeight: 160,
+          fontSize: 14,
+          fontFamily: 'inherit',
+          color: 'var(--text-primary)',
+          background: 'var(--bg-elev-1)',
+          border: '1px solid var(--border-glass)',
+          borderRadius: 10,
+          outline: 'none'
+        }}
+      />
+      {status === 'streaming' ? (
+        <button
+          onClick={onAbort}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            background: 'rgba(255,108,108,0.18)',
+            border: '1px solid rgba(255,108,108,0.4)',
+            color: '#ffb3bf',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          title="Ferma"
+        >
+          <Square size={14} />
+        </button>
+      ) : (
+        <button
+          onClick={handleSubmit}
+          disabled={!local.trim()}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            background: local.trim() ? 'var(--gradient-aurora)' : 'var(--bg-elev-1)',
+            border: local.trim() ? 'none' : '1px solid var(--border-glass)',
+            color: '#0b0b14',
+            cursor: local.trim() ? 'pointer' : 'not-allowed',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          title="Invia"
+        >
+          <Send size={15} />
+        </button>
+      )}
+    </div>
+  )
+}
+

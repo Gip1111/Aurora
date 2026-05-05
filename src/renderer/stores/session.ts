@@ -21,7 +21,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   wallpaper: 'aurora-flow',
   wallpaperImage: '',
   openrouterApiKey: '',
-  openrouterModel: 'openrouter/owl-alpha',
+  openrouterModel: 'meta-llama/llama-3.3-70b-instruct:free',
   autonomousMode: false,
   cursorTrail: false,
   reduceMotion: false,
@@ -44,8 +44,11 @@ function loadSettings(): AppSettings {
     const merged = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) }
     // Migration: any of the previous defaults gets upgraded to the current
     // default. User-selected non-default values are preserved.
-    const LEGACY_DEFAULTS = ['qwen2.5:7b', 'qwen3:4b', 'qwen2.5:3b', 'llama3.2:3b', 'llama3.2:1b']
-    if (LEGACY_DEFAULTS.includes((merged as any).ollamaModel) || !merged.openrouterModel) {
+    const LEGACY_DEFAULTS = [
+      'qwen2.5:7b', 'qwen3:4b', 'qwen2.5:3b', 'llama3.2:3b', 'llama3.2:1b',
+      'openrouter/owl-alpha', 'meta-llama/llama-4-scout:free', 'google/gemini-2.0-flash-exp:free'
+    ]
+    if (LEGACY_DEFAULTS.includes((merged as any).ollamaModel) || LEGACY_DEFAULTS.includes(merged.openrouterModel) || !merged.openrouterModel) {
       merged.openrouterModel = DEFAULT_SETTINGS.openrouterModel
     }
     return merged
