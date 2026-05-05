@@ -1,0 +1,93 @@
+{
+  "name": "aurora-de",
+  "version": "0.1.0",
+  "description": "Aurora DE — shell semplificata + AI sopra Windows",
+  "main": "out/main/index.js",
+  "author": "Aurora DE",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "dist": "electron-vite build && electron-builder",
+    "dist:win": "electron-vite build && electron-builder --win",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+  },
+  "dependencies": {
+    "@node-rs/argon2": "^2.0.2",
+    "electron-log": "^5.4.3",
+    "electron-updater": "^6.3.9",
+    "framer-motion": "^11.11.0",
+    "lucide-react": "^0.452.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@electron-toolkit/preload": "^3.0.1",
+    "@electron-toolkit/utils": "^3.0.0",
+    "@tailwindcss/postcss": "^4.0.0-beta.4",
+    "@types/node": "^22.7.4",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.2",
+    "autoprefixer": "^10.4.20",
+    "electron": "^32.1.2",
+    "electron-builder": "^25.0.5",
+    "electron-vite": "^2.3.0",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^4.0.0-beta.4",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.8"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "esbuild",
+      "@tailwindcss/oxide",
+      "lightningcss",
+      "@node-rs/argon2"
+    ]
+  },
+  "build": {
+    "appId": "com.aurora.de",
+    "productName": "Aurora DE",
+    "files": [
+      "out/**/*"
+    ],
+    "extraResources": [
+      "resources/tray-icon.png",
+      "resources/icon.png"
+    ],
+    "directories": {
+      "buildResources": "resources",
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "resources/icon.ico",
+      "artifactName": "Aurora-DE-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Aurora DE",
+      "uninstallDisplayName": "Aurora DE",
+      "deleteAppDataOnUninstall": false
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "resources/icon.png",
+      "category": "public.app-category.utilities"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "resources/icon.png",
+      "category": "Utility"
+    }
+  }
+}
