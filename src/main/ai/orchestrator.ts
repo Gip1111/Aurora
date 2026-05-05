@@ -148,13 +148,18 @@ export async function runAgent(
 
   const tools = openRouterToolSpec()
 
-  const fallbackModels = [
-    opts.model,
-    'meta-llama/llama-3.3-70b-instruct:free',
-    'google/gemma-3-27b-it:free',
-    'nousresearch/hermes-3-llama-3.1-405b:free',
-    'openrouter/owl-alpha'
-  ]
+  // Live free models on OpenRouter (verified 2026-05). Listed in order of
+  // tool-call reliability + speed for our use case.
+  const fallbackModels = Array.from(
+    new Set([
+      opts.model,
+      'meta-llama/llama-3.3-70b-instruct:free',
+      'qwen/qwen3-next-80b-a3b-instruct:free',
+      'openai/gpt-oss-20b:free',
+      'nvidia/nemotron-nano-9b-v2:free',
+      'openrouter/free' // meta-router that picks any available free model
+    ])
+  )
 
   for (let iter = 0; iter < 8; iter++) {
     let res: Response | null = null
@@ -206,10 +211,17 @@ export async function runAgent(
       } catch {
         /* ignore */
       }
-      const isAuthError = res.status === 401 || res.status === 403
-      const msg = isAuthError
-        ? 'Chiave API OpenRouter non valida o scaduta. Controlla in Impostazioni → Assistente AI.'
-        : `Tutti i modelli gratuiti sono momentaneamente intasati (HTTP ${res.status}). Riprova tra 1-2 minuti.`
+      const isAuth = res.status === 401 || res.status === 403
+      const isNotFound = res.status === 404
+      const isRateLimit = res.status === 429
+      const snippet = detail ? ` — ${detail.slice(0, 200)}` : ''
+      const msg = isAuth
+        ? 'Chiave API OpenRouter non valida o scaduta. Apri Impostazioni → Assistente AI e incolla una chiave valida (puoi generarla gratis su openrouter.ai/keys).'
+        : isNotFound
+          ? `Modello non trovato (404). Apri Impostazioni → Assistente AI e seleziona "meta-llama/llama-3.3-70b-instruct:free" o "openrouter/free".${snippet}`
+          : isRateLimit
+            ? 'Limite gratuito raggiunto. Riprova tra qualche minuto, oppure aggiungi crediti su openrouter.ai.'
+            : `Errore OpenRouter HTTP ${res.status}.${snippet}`
       send({ type: 'error', data: msg })
       return
     }

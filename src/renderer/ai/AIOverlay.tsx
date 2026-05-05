@@ -70,9 +70,9 @@ export function AIOverlay(): JSX.Element {
             position: 'fixed',
             inset: 0,
             zIndex: 2000,
-            background: 'rgba(7,7,13,0.55)',
-            backdropFilter: 'blur(40px) saturate(140%)',
-            WebkitBackdropFilter: 'blur(40px) saturate(140%)',
+            background: 'rgba(5,5,10,0.78)',
+            backdropFilter: 'blur(60px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(60px) saturate(180%)',
             display: 'flex',
             alignItems: 'flex-start',
             justifyContent: 'center',
@@ -90,10 +90,13 @@ export function AIOverlay(): JSX.Element {
               maxHeight: '78vh',
               display: 'flex',
               flexDirection: 'column',
-              background: 'var(--bg-elev-3)',
+              background: 'rgba(18, 18, 30, 0.96)',
+              backdropFilter: 'blur(20px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(160%)',
               border: '1px solid var(--border-glass-strong)',
               borderRadius: 18,
-              boxShadow: 'var(--shadow-window)',
+              boxShadow:
+                '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(176,124,255,0.15), inset 0 1px 0 rgba(255,255,255,0.08)',
               overflow: 'hidden'
             }}
           >
