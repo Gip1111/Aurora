@@ -183,7 +183,7 @@ export async function runAgent(
           signal: opts.signal
         })
         
-        if (res.status === 429 || res.status === 502) {
+        if (res.status === 429 || res.status === 502 || res.status === 404) {
           console.warn(`[ai] Model ${activeModel} returned ${res.status}, trying next fallback...`)
           continue
         }
