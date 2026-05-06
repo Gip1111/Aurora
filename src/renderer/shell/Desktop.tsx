@@ -11,7 +11,6 @@ import { ActivitiesOverview } from './ActivitiesOverview'
 import { Welcome } from './Welcome'
 import { SessionPersistence } from './SessionPersistence'
 import { SnapHint } from './SnapHint'
-import { DesktopHub } from './DesktopHub'
 import { DesktopIcons } from './DesktopIcons'
 import { DesktopContextMenu } from './DesktopContextMenu'
 import { AIOverlay } from '@/ai/AIOverlay'
@@ -191,7 +190,6 @@ export function Desktop(): JSX.Element {
           zIndex: 1
         }}
       />
-      <DesktopHub />
       <DesktopIcons />
       <Taskbar />
       <WindowManager />
